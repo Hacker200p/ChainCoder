@@ -1,0 +1,217 @@
+Organizations:
+
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/sih26125.local/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &BEL
+    Name: BELMSP
+    ID: BELMSP
+    MSPDir: ../organizations/peerOrganizations/bel.sih26125.local/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('BELMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('BELMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('BELMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('BELMSP.peer')"
+
+  - &Auditor
+    Name: AuditorMSP
+    ID: AuditorMSP
+    MSPDir: ../organizations/peerOrganizations/auditor.sih26125.local/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('AuditorMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('AuditorMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('AuditorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('AuditorMSP.peer')"
+
+  - &Contractor
+    Name: ContractorMSP
+    ID: ContractorMSP
+    MSPDir: ../organizations/peerOrganizations/contractor.sih26125.local/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ContractorMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ContractorMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ContractorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ContractorMSP.peer')"
+
+
+Capabilities:
+
+  Channel: &ChannelCapabilities
+    V2_0: true
+
+  Orderer: &OrdererCapabilities
+    V2_0: true
+
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+
+Application: &ApplicationDefaults
+
+  Organizations:
+
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+
+
+Orderer: &OrdererDefaults
+
+  OrdererType: etcdraft
+
+  BatchTimeout: 2s
+
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+
+  EtcdRaft:
+
+    Consenters:
+
+      - Host: orderer1.sih26125.local
+        Port: 7050
+        ClientTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer1.sih26125.local/tls/signcerts/cert.pem
+        ServerTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer1.sih26125.local/tls/signcerts/cert.pem
+
+      - Host: orderer2.sih26125.local
+        Port: 8050
+        ClientTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer2.sih26125.local/tls/signcerts/cert.pem
+        ServerTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer2.sih26125.local/tls/signcerts/cert.pem
+
+      - Host: orderer3.sih26125.local
+        Port: 9050
+        ClientTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer3.sih26125.local/tls/signcerts/cert.pem
+        ServerTLSCert: ../organizations/ordererOrganizations/sih26125.local/orderers/orderer3.sih26125.local/tls/signcerts/cert.pem
+
+  Addresses:
+    - orderer1.sih26125.local:7050
+    - orderer2.sih26125.local:8050
+    - orderer3.sih26125.local:9050
+
+  Organizations:
+
+  Policies:
+
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+
+Channel: &ChannelDefaults
+
+  Policies:
+
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+
+
+Profiles:
+
+  SIH26125Channel:
+
+    <<: *ChannelDefaults
+
+    Capabilities:
+      <<: *ChannelCapabilities
+
+    Orderer:
+
+      <<: *OrdererDefaults
+
+      Capabilities:
+        <<: *OrdererCapabilities
+
+      Organizations:
+        - *OrdererOrg
+
+    Application:
+
+      <<: *ApplicationDefaults
+
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+      Organizations:
+        - *BEL
+        - *Auditor
+        - *Contractor

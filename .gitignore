@@ -1,0 +1,187 @@
+# =========================================
+# Environment / Secrets
+# =========================================
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+
+# =========================================
+# Node.js
+# =========================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+.npm/
+.cache/
+
+
+# =========================================
+# Build / Coverage
+# =========================================
+
+dist/
+build/
+coverage/
+.vite/
+.next/
+
+
+# =========================================
+# Logs
+# =========================================
+
+logs/
+*.log
+
+
+# =========================================
+# OS / Editor
+# =========================================
+
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+.idea/
+
+
+# =========================================
+# Fabric PRIVATE keys / identities
+# =========================================
+
+**/keystore/
+**/*_sk
+
+# Enrolled identities created during local setup
+**/.msp-enroll/
+**/msp-enroll/
+
+# TLS enrollment material
+**/.tls-enroll/
+**/tls-enroll/
+
+# CA runtime database/private runtime files
+**/fabric-ca-server/db/
+**/fabric-ca-server/ca-cert.pem
+**/fabric-ca-server/tls-cert.pem
+
+# Private identity material
+**/private/
+**/wallet/
+
+
+# =========================================
+# Fabric generated runtime data
+# =========================================
+
+**/data/
+**/production/
+**/ledgersData/
+
+# Docker/Fabric runtime artifacts
+*.block
+*.tx
+
+# Generated chaincode packages
+*.tar.gz
+*.tgz
+
+
+# =========================================
+# Temporary files
+# =========================================
+
+tmp/
+temp/
+*.tmp
+
+
+# =========================================
+# Uploads / documents
+# =========================================
+
+uploads/
+storage/
+
+# Never accidentally commit user documents
+*.pdf
+*.doc
+*.docx
+*.png
+*.jpg
+*.jpeg
+*.zip
+# =========================================
+# External Fabric samples repository
+# =========================================
+
+/blockchain/fabric-samples/
+
+
+# =========================================
+# Fabric CA databases
+# =========================================
+
+**/fabric-ca-server*.db
+**/fabric-ca-server*.db.backup
+**/*-server*.db
+**/*-server*.db.backup
+
+# =========================================
+# Local Fabric admin enrollment
+# =========================================
+
+/blockchain/sih-network/.ca-admin/
+
+
+# =========================================
+# Fabric CA runtime state
+# =========================================
+
+/blockchain/sih-network/organizations/fabric-ca/*/ca/
+/blockchain/sih-network/organizations/fabric-ca/*/db/
+
+# =========================================
+# Generated validation/debug artifacts
+# =========================================
+
+/blockchain/sih-network/bel-block1.json
+/blockchain/sih-network/bel-config.json
+/blockchain/sih-network/block1-orderer-cert.pem
+/blockchain/sih-network/block1.json
+/blockchain/sih-network/channel-genesis.json
+/blockchain/sih-network/channel-orderer-ou.pem
+/blockchain/sih-network/channel-orderer-root.pem
+/blockchain/sih-network/container-orderer-ca.pem
+/blockchain/sih-network/creator-cert.pem
+/blockchain/sih-network/current-config.json
+/blockchain/sih-network/genesis-bel-ca.pem
+/blockchain/sih-network/genesis-config.json
+/blockchain/sih-network/genesis-orderer-root.pem
+/blockchain/sih-network/genesis-orderer1.pem
+/blockchain/sih-network/genesis-preview.txt
+/blockchain/sih-network/genesis.json
+/blockchain/sih-network/orderer1-block-cert.b64
+/blockchain/sih-network/orderer1-block-cert.pem
+/blockchain/sih-network/orderer1-live-cert.pem
+/blockchain/sih-network/orderer2-live-cert.pem
+
+# =========================================
+# Fabric CA generated runtime
+# =========================================
+
+/blockchain/sih-network/organizations/fabric-ca/*
+# Generated Hyperledger Fabric organizations
+/blockchain/sih-network/organizations/
+
+# Fabric sample binaries / source repository
+/blockchain/fabric-samples/

@@ -1,0 +1,161 @@
+version: "3.8"
+
+networks:
+  sih_network:
+    external: true
+
+volumes:
+  bel_data:
+  auditor_data:
+  contractor_data:
+
+services:
+
+  # ============================================================
+  # BEL PEER
+  # ============================================================
+  peer0.bel.sih26125.local:
+    container_name: peer0.bel.sih26125.local
+    image: hyperledger/fabric-peer:2.5
+
+    environment:
+      # General
+      - CORE_PEER_ID=peer0.bel.sih26125.local
+      - CORE_PEER_ADDRESS=peer0.bel.sih26125.local:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_LOCALMSPID=BELMSP
+      - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/peer/msp
+
+      # Chaincode
+      - CORE_PEER_CHAINCODEADDRESS=peer0.bel.sih26125.local:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=sih_network
+
+      # TLS
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/signcerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/7250abe899690a95255a2ea00268f8ff8149df34e93540f81a2f184932a5ff9e_sk
+      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/tlscacerts/tls-localhost-7054.pem
+
+      # Gossip
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.bel.sih26125.local:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.bel.sih26125.local:7051
+
+      # Ledger
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+
+    command: peer node start
+
+    volumes:
+      - ../organizations/peerOrganizations/bel.sih26125.local/peers/peer0.bel.sih26125.local/msp:/var/hyperledger/peer/msp
+      - ../organizations/peerOrganizations/bel.sih26125.local/peers/peer0.bel.sih26125.local/tls:/var/hyperledger/peer/tls
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - bel_data:/var/hyperledger/production
+
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+
+    networks:
+      - sih_network
+
+
+  # ============================================================
+  # AUDITOR PEER
+  # ============================================================
+  peer0.auditor.sih26125.local:
+    container_name: peer0.auditor.sih26125.local
+    image: hyperledger/fabric-peer:2.5
+
+    environment:
+      # General
+      - CORE_PEER_ID=peer0.auditor.sih26125.local
+      - CORE_PEER_ADDRESS=peer0.auditor.sih26125.local:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_LOCALMSPID=AuditorMSP
+      - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/peer/msp
+
+      # Chaincode
+      - CORE_PEER_CHAINCODEADDRESS=peer0.auditor.sih26125.local:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=sih_network
+
+      # TLS
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/signcerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/45c3cd4abd258974701340e4c3ee525ed91d66a007424dfebb04373b4756c8e6_sk
+      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/tlscacerts/tls-localhost-8054.pem
+
+      # Gossip
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.auditor.sih26125.local:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.auditor.sih26125.local:8051
+
+      # Ledger
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+
+    command: peer node start
+
+    volumes:
+      - ../organizations/peerOrganizations/auditor.sih26125.local/peers/peer0.auditor.sih26125.local/msp:/var/hyperledger/peer/msp
+      - ../organizations/peerOrganizations/auditor.sih26125.local/peers/peer0.auditor.sih26125.local/tls:/var/hyperledger/peer/tls
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - auditor_data:/var/hyperledger/production
+
+    ports:
+      - "8051:8051"
+      - "8052:8052"
+
+    networks:
+      - sih_network
+
+
+  # ============================================================
+  # CONTRACTOR PEER
+  # ============================================================
+  peer0.contractor.sih26125.local:
+    container_name: peer0.contractor.sih26125.local
+    image: hyperledger/fabric-peer:2.5
+
+    environment:
+      # General
+      - CORE_PEER_ID=peer0.contractor.sih26125.local
+      - CORE_PEER_ADDRESS=peer0.contractor.sih26125.local:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_LOCALMSPID=ContractorMSP
+      - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/peer/msp
+
+      # Chaincode
+      - CORE_PEER_CHAINCODEADDRESS=peer0.contractor.sih26125.local:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=sih_network
+
+      # TLS
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/signcerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/e7e8a5e41b1f28aecc8b1b6d397ec7d1c44bd32565331f63b51625eed674f413_sk
+      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/tlscacerts/tls-localhost-9054.pem
+
+      # Gossip
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.contractor.sih26125.local:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.contractor.sih26125.local:9051
+
+      # Ledger
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+
+    command: peer node start
+
+    volumes:
+      - ../organizations/peerOrganizations/contractor.sih26125.local/peers/peer0.contractor.sih26125.local/msp:/var/hyperledger/peer/msp
+      - ../organizations/peerOrganizations/contractor.sih26125.local/peers/peer0.contractor.sih26125.local/tls:/var/hyperledger/peer/tls
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - contractor_data:/var/hyperledger/production
+
+    ports:
+      - "9051:9051"
+      - "9052:9052"
+
+    networks:
+      - sih_network

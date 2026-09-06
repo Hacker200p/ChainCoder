@@ -1,0 +1,152 @@
+version: "3.8"
+
+networks:
+  sih_network:
+    external: true
+
+volumes:
+  orderer1_data:
+  orderer2_data:
+  orderer3_data:
+
+services:
+
+  # ============================================================
+  # ORDERER 1
+  # ============================================================
+  orderer1.sih26125.local:
+    container_name: orderer1.sih26125.local
+    image: hyperledger/fabric-orderer:2.5
+
+    environment:
+      # General
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+
+      # General TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/08a446b1d813e30871d27dace6edd58c3fec3d2c433b48030693b107e87a72fa_sk
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+      # Channel participation
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+
+      # Admin API
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/08a446b1d813e30871d27dace6edd58c3fec3d2c433b48030693b107e87a72fa_sk
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+    command: orderer
+
+    volumes:
+      - orderer1_data:/var/hyperledger
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer1.sih26125.local/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer1.sih26125.local/tls:/var/hyperledger/orderer/tls
+
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+
+    networks:
+      - sih_network
+
+
+  # ============================================================
+  # ORDERER 2
+  # ============================================================
+  orderer2.sih26125.local:
+    container_name: orderer2.sih26125.local
+    image: hyperledger/fabric-orderer:2.5
+
+    environment:
+      # General
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=8050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+
+      # General TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/915fb71f80924ef4b2c2529458ecbd26d4282884778d4c802e66275358bbe5d5_sk
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+      # Channel participation
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+
+      # Admin API
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:8053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/915fb71f80924ef4b2c2529458ecbd26d4282884778d4c802e66275358bbe5d5_sk
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+    command: orderer
+
+    volumes:
+      - orderer2_data:/var/hyperledger
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer2.sih26125.local/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer2.sih26125.local/tls:/var/hyperledger/orderer/tls
+
+    ports:
+      - "8050:8050"
+      - "8053:8053"
+
+    networks:
+      - sih_network
+
+
+  # ============================================================
+  # ORDERER 3
+  # ============================================================
+  orderer3.sih26125.local:
+    container_name: orderer3.sih26125.local
+    image: hyperledger/fabric-orderer:2.5
+
+    environment:
+      # General
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=9050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+
+      # General TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/54a0ee901d2f51798a772a59ed90ddff63a163699504dbe2e61a2db190be0d59_sk
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+      # Channel participation
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+
+      # Admin API
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:9053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/54a0ee901d2f51798a772a59ed90ddff63a163699504dbe2e61a2db190be0d59_sk
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-10054-OrdererCA.pem]
+
+    command: orderer
+
+    volumes:
+      - orderer3_data:/var/hyperledger
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer3.sih26125.local/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/sih26125.local/orderers/orderer3.sih26125.local/tls:/var/hyperledger/orderer/tls
+
+    ports:
+      - "9050:9050"
+      - "9053:9053"
+
+    networks:
+      - sih_network
