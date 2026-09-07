@@ -185,3 +185,4 @@ storage/
 
 # Fabric sample binaries / source repository
 /blockchain/fabric-samples/
+/backend/fabric/

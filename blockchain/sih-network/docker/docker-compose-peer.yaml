@@ -35,7 +35,7 @@ services:
       # TLS
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/signcerts/cert.pem
-      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/7250abe899690a95255a2ea00268f8ff8149df34e93540f81a2f184932a5ff9e_sk
+      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/680d1a534ecbad02e8dfad4deec08b3d071ade729b8d1112e0d63e0b48b2d7d0_sk
       - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/tlscacerts/tls-localhost-7054.pem
 
       # Gossip
