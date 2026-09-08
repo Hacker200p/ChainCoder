@@ -117,7 +117,8 @@ async function transferExistingAsset(req, res) {
 
         const asset = await transferAsset(
             assetId,
-            newOwner
+            newOwner,
+            req.user.organization
         );
 
         res.json({

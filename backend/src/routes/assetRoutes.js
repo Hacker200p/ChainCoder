@@ -10,7 +10,8 @@ const {
 
 const {
     authenticate,
-    authorizeOrganization
+    authorizeOrganization,
+    authorizeOrganizationRoles
 } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -26,11 +27,14 @@ router.post(
 // Any authenticated user can view an asset
 router.get('/:assetId', authenticate, fetchAsset);
 
-// BEL Admin/Manager can transfer assets
+// BEL Admin and Contractor users can transfer assets through their org gateway.
 router.patch(
     '/:assetId/transfer',
     authenticate,
-    authorizeOrganization('BEL', 'Admin', 'Manager'),
+    authorizeOrganizationRoles(
+        { organization: 'BEL', roles: ['Admin'] },
+        { organization: 'Contractor', roles: ['Admin', 'User'] }
+    ),
     transferExistingAsset
 );
 

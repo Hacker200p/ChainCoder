@@ -80,7 +80,13 @@ async function revokeIdentity(identityId) {
         }
     }
 }
-async function grantAccess(identityId, assetId, permission) {
+async function grantAccess(
+    accessId,
+    identityId,
+    assetId,
+    grantedTo,
+    permission
+) {
     let connection;
 
     try {
@@ -88,8 +94,10 @@ async function grantAccess(identityId, assetId, permission) {
 
         const result = await connection.contract.submitTransaction(
             'GrantAccess',
+            accessId,
             identityId,
             assetId,
+            grantedTo,
             permission
         );
 

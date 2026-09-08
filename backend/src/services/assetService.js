@@ -64,11 +64,11 @@ async function getAsset(assetId) {
     }
 }
 
-async function transferAsset(assetId, newOwner) {
+async function transferAsset(assetId, newOwner, organization = 'BEL') {
     let connection;
 
     try {
-        connection = connectToFabric();
+        connection = connectToFabric(organization);
 
         const result = await connection.contract.submitTransaction(
             'TransferAsset',

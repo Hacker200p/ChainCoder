@@ -8,6 +8,7 @@ const {
     rejectRequest,
     auditorApproveRequest
 } = require('../services/accessRequestService');
+const { grantAccess } = require('../services/fabricService');
 
 async function requestAccess(req, res) {
     try {
@@ -150,21 +151,46 @@ async function auditorApproveAccessRequest(req, res) {
     try {
         const { requestId } = req.params;
 
-        const request = auditorApproveRequest(
+        const request = getRequestById(requestId);
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: 'Access request not found'
+            });
+        }
+
+        if (request.status !== 'BEL_APPROVED') {
+            return res.status(400).json({
+                success: false,
+                message: 'Request must be BEL_APPROVED before Auditor approval'
+            });
+        }
+
+        const fabricResult = await grantAccess(
+            request.requestId,
+            request.identityId,
+            request.assetId,
+            request.requesterId,
+            request.permission
+        );
+
+        const approvedRequest = auditorApproveRequest(
             requestId,
             req.user.userId
         );
 
         return res.status(200).json({
             success: true,
-            message: 'Access request approved by Auditor',
-            request
+            message: 'Access approved and recorded on Fabric',
+            request: approvedRequest,
+            fabric: fabricResult
         });
 
     } catch (error) {
-        console.error('Auditor approval error:', error);
+        console.error('Fabric GrantAccess error:', error);
 
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });

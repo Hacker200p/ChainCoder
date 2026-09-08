@@ -75,7 +75,7 @@ router.post(
 router.post(
     '/',
     authenticate,
-    authorize('Admin', 'Manager'),
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
     createAccess
 );
 
