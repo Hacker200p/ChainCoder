@@ -10,7 +10,8 @@ const {
 
 const {
     authenticate,
-    authorize
+    authorizeOrganization,
+    authorizeOrganizationRoles
 } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -18,7 +19,10 @@ const router = express.Router();
 router.post(
     '/',
     authenticate,
-    authorize('Admin', 'Manager'),
+    authorizeOrganizationRoles(
+        { organization: 'BEL', roles: ['Admin', 'Manager'] },
+        { organization: 'Contractor', roles: ['Admin'] }
+    ),
     createIdentity
 );
 
@@ -31,7 +35,7 @@ router.get(
 router.patch(
     '/:identityId/revoke',
     authenticate,
-    authorize('Admin', 'Manager'),
+    authorizeOrganization('BEL', 'Admin'),
     revokeExistingIdentity
 );
 

@@ -5,12 +5,15 @@ const express = require('express');
 const {
     createAccess,
     checkExistingAccess,
-    revokeExistingAccess
+    revokeExistingAccess,
+    listAccessHistory
 } = require('../controllers/accessController');
 
 const {
     requestAccess,
     listAccessRequests,
+    listPendingAccessRequests,
+    listMyAccessRequests,
     getAccessRequest,
     approveAccessRequest,
     rejectAccessRequest,
@@ -19,13 +22,11 @@ const {
 
 const {
     authenticate,
-    authorize,
     authorizeOrganization
 } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Contractor users can request access to assets.
 router.post(
     '/request',
     authenticate,
@@ -33,7 +34,27 @@ router.post(
     requestAccess
 );
 
-// BEL Admin/Manager users can view the approval queue.
+router.post(
+    '/requests',
+    authenticate,
+    authorizeOrganization('Contractor', 'Admin', 'User'),
+    requestAccess
+);
+
+router.get(
+    '/requests/my',
+    authenticate,
+    authorizeOrganization('Contractor', 'Admin', 'User'),
+    listMyAccessRequests
+);
+
+router.get(
+    '/requests/pending',
+    authenticate,
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
+    listPendingAccessRequests
+);
+
 router.get(
     '/requests',
     authenticate,
@@ -41,15 +62,20 @@ router.get(
     listAccessRequests
 );
 
-// Authenticated users can view a specific request.
 router.get(
     '/requests/:requestId',
     authenticate,
     getAccessRequest
 );
 
-// BEL Admin/Manager users can approve or reject requests.
 router.post(
+    '/requests/:requestId/approve',
+    authenticate,
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
+    approveAccessRequest
+);
+
+router.patch(
     '/requests/:requestId/approve',
     authenticate,
     authorizeOrganization('BEL', 'Admin', 'Manager'),
@@ -63,7 +89,13 @@ router.post(
     rejectAccessRequest
 );
 
-// Auditor users can co-sign BEL-approved requests.
+router.patch(
+    '/requests/:requestId/reject',
+    authenticate,
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
+    rejectAccessRequest
+);
+
 router.post(
     '/requests/:requestId/auditor-approve',
     authenticate,
@@ -71,7 +103,13 @@ router.post(
     auditorApproveAccessRequest
 );
 
-// Grant access
+router.get(
+    '/history',
+    authenticate,
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
+    listAccessHistory
+);
+
 router.post(
     '/',
     authenticate,
@@ -79,18 +117,16 @@ router.post(
     createAccess
 );
 
-// Check access
 router.get(
     '/:identityId/:assetId',
     authenticate,
     checkExistingAccess
 );
 
-// Revoke access
 router.patch(
     '/:identityId/:assetId/revoke',
     authenticate,
-    authorize('Admin', 'Manager'),
+    authorizeOrganization('BEL', 'Admin', 'Manager'),
     revokeExistingAccess
 );
 

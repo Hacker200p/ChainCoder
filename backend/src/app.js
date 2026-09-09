@@ -2,30 +2,41 @@
 
 require('dotenv').config();
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { connectToFabric } = require('./config/fabric');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const assetRoutes = require('./routes/assetRoutes');
 const identityRoutes = require('./routes/identityRoutes');
 const accessRoutes = require('./routes/accessRoutes');
 const authRoutes = require('./routes/authRoutes');
 const auditorRoutes = require('./routes/auditorRoutes');
+const auditRoutes = require('./routes/auditRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const verifyRoutes = require('./routes/verifyRoutes');
 
+const uploadDir = path.join(__dirname, '../uploads');
 
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
-
 
 app.use('/api/identities', identityRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/access', accessRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/auditor', auditorRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/verify', verifyRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({
@@ -60,7 +71,8 @@ app.get('/api/blockchain/test', async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Unable to query the blockchain',
+            errorCode: 'INTERNAL_ERROR'
         });
 
     } finally {
@@ -70,6 +82,9 @@ app.get('/api/blockchain/test', async (req, res) => {
         }
     }
 });
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

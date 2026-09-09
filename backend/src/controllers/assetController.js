@@ -3,9 +3,36 @@
 const {
     mintAsset,
     getAsset,
-    transferAsset
+    transferAsset,
+    updateAssetDocument,
+    getAssetHistory
 } = require('../services/assetService');
+const { saveUploadedFile, hashFromIpfs, retrieveFromIpfs } = require('../services/fileService');
+const { recordFromRequest } = require('../services/auditLogService');
+const { notifyRoles, createNotification } = require('../services/notificationService');
+const {
+    assertSafeId,
+    canViewAsset,
+    canModifyAssetDocument,
+    canDownloadAsset,
+    canTransferAsset
+} = require('../services/authorizationService');
+const { AppError, handleControllerError, sendSuccess, sendError } = require('../utils/errors');
 
+function publicAssetView(asset) {
+    return {
+        assetId: asset.assetId,
+        name: asset.name,
+        assetType: asset.assetType,
+        status: asset.status,
+        ownerOrganization: asset.ownerOrganization || null,
+        owner: asset.owner,
+        documentHash: asset.documentHash || '',
+        documentCID: asset.documentCID || '',
+        createdAt: asset.createdAt,
+        updatedAt: asset.updatedAt
+    };
+}
 
 async function createAsset(req, res) {
     try {
@@ -26,13 +53,18 @@ async function createAsset(req, res) {
             !documentHash ||
             !documentCID
         ) {
-            return res.status(400).json({
-                success: false,
-                message: 'assetId, name, assetType, owner, documentHash and documentCID are required'
-            });
+            return sendError(
+                res,
+                400,
+                'assetId, name, assetType, owner, documentHash and documentCID are required',
+                'BAD_REQUEST'
+            );
         }
 
+        assertSafeId(assetId, 'assetId');
+
         const asset = await mintAsset(
+            req.user.organization,
             assetId,
             name,
             assetType,
@@ -41,60 +73,70 @@ async function createAsset(req, res) {
             documentCID
         );
 
-        res.status(201).json({
-            success: true,
+        recordFromRequest(req, {
+            action: 'ASSET_MINTED',
+            resourceType: 'asset',
+            resourceId: assetId,
+            success: true
+        });
+
+        createNotification({
+            userId: owner,
+            organization: req.user.organization,
+            type: 'ASSET_CREATED',
+            title: 'Asset created',
+            message: `Asset ${assetId} was minted`,
+            resourceType: 'asset',
+            resourceId: assetId
+        });
+
+        notifyRoles('Auditor', ['Auditor'], {
+            type: 'ASSET_CREATED',
+            title: 'Asset minted',
+            message: `Asset ${assetId} was minted by ${req.user.userId}`,
+            resourceType: 'asset',
+            resourceId: assetId
+        });
+
+        return sendSuccess(res, {
             message: 'Asset minted successfully',
             asset
-        });
-
+        }, 201);
     } catch (error) {
         console.error('Create asset error:', error);
-        console.error('Fabric details:', error.details);
-        console.error('Fabric cause:', error.cause);
-    
-        res.status(500).json({
+        recordFromRequest(req, {
+            action: 'ASSET_MINTED',
+            resourceType: 'asset',
+            resourceId: req.body?.assetId,
             success: false,
-            message: error.message,
-            details: error.details || null,
-            cause: error.cause ? error.cause.message : null
+            message: error.message
         });
-    
+        return handleControllerError(res, error, 'Unable to mint asset');
     }
 }
-
 
 async function fetchAsset(req, res) {
     try {
         const { assetId } = req.params;
 
         if (!assetId) {
-            return res.status(400).json({
-                success: false,
-                message: 'assetId is required'
-            });
+            return sendError(res, 400, 'assetId is required', 'BAD_REQUEST');
         }
 
-        const asset = await getAsset(assetId);
+        assertSafeId(assetId, 'assetId');
 
-        res.json({
-            success: true,
-            asset
-        });
+        const asset = await getAsset(assetId, req.user.organization);
 
+        if (!(await canViewAsset(req.user, asset))) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        return sendSuccess(res, { asset });
     } catch (error) {
         console.error('Get asset error:', error);
-
-        if (error.details) {
-            console.error('Fabric details:', error.details);
-        }
-
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        return handleControllerError(res, error, 'Unable to fetch asset');
     }
 }
-
 
 async function transferExistingAsset(req, res) {
     try {
@@ -102,44 +144,331 @@ async function transferExistingAsset(req, res) {
         const { newOwner } = req.body;
 
         if (!assetId) {
-            return res.status(400).json({
-                success: false,
-                message: 'assetId is required'
-            });
+            return sendError(res, 400, 'assetId is required', 'BAD_REQUEST');
         }
 
         if (!newOwner) {
-            return res.status(400).json({
-                success: false,
-                message: 'newOwner is required'
-            });
+            return sendError(res, 400, 'newOwner is required', 'BAD_REQUEST');
         }
 
+        assertSafeId(assetId, 'assetId');
+
+        const existing = await getAsset(assetId, req.user.organization);
+
+        if (!canTransferAsset(req.user, existing)) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        const previousOwner = existing.owner;
         const asset = await transferAsset(
             assetId,
             newOwner,
             req.user.organization
         );
 
-        res.json({
-            success: true,
+        recordFromRequest(req, {
+            action: 'ASSET_TRANSFERRED',
+            resourceType: 'asset',
+            resourceId: assetId,
+            success: true
+        });
+
+        createNotification({
+            userId: previousOwner,
+            type: 'ASSET_TRANSFERRED',
+            title: 'Asset transferred',
+            message: `Asset ${assetId} was transferred to ${newOwner}`,
+            resourceType: 'asset',
+            resourceId: assetId
+        });
+
+        createNotification({
+            userId: newOwner,
+            type: 'ASSET_TRANSFERRED',
+            title: 'Asset received',
+            message: `Asset ${assetId} was transferred to you`,
+            resourceType: 'asset',
+            resourceId: assetId
+        });
+
+        return sendSuccess(res, {
             message: 'Asset transferred successfully',
             asset
         });
-
     } catch (error) {
         console.error('Transfer asset error:', error);
-
-        res.status(500).json({
+        recordFromRequest(req, {
+            action: 'ASSET_TRANSFERRED',
+            resourceType: 'asset',
+            resourceId: req.params.assetId,
             success: false,
             message: error.message
         });
+        return handleControllerError(res, error, 'Unable to transfer asset');
     }
 }
 
+async function uploadAssetDocument(req, res) {
+    const { assetId } = req.params;
+    let ipfsSucceeded = false;
+    let fileData = null;
+
+    try {
+        assertSafeId(assetId, 'assetId');
+
+        if (!req.file) {
+            return sendError(res, 400, 'Document file is required', 'BAD_REQUEST');
+        }
+
+        if (!req.file.size) {
+            return sendError(res, 400, 'Empty files are not allowed', 'BAD_REQUEST');
+        }
+
+        const asset = await getAsset(assetId, req.user.organization);
+
+        if (!(await canModifyAssetDocument(req.user, asset))) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        if (asset.status !== 'ACTIVE') {
+            return sendError(res, 409, `Asset ${assetId} is not ACTIVE`, 'CONFLICT');
+        }
+
+        fileData = await saveUploadedFile(req.file);
+        ipfsSucceeded = true;
+
+        let blockchain = {
+            documentHashStored: false,
+            documentCIDStored: false,
+            updatedAsset: null
+        };
+
+        try {
+            const updatedAsset = await updateAssetDocument(
+                assetId,
+                fileData.hash,
+                fileData.cid,
+                'BEL'
+            );
+
+            blockchain = {
+                documentHashStored: true,
+                documentCIDStored: true,
+                updatedAsset
+            };
+        } catch (fabricError) {
+            console.error('UpdateAssetDocument error:', fabricError);
+
+            recordFromRequest(req, {
+                action: 'ASSET_DOCUMENT_UPDATED',
+                resourceType: 'asset',
+                resourceId: assetId,
+                success: false,
+                message: fabricError.message
+            });
+
+            const unavailable = fabricError.code === 'CHAINCODE_FUNCTION_UNAVAILABLE';
+
+            return res.status(unavailable ? 501 : 500).json({
+                success: false,
+                message: unavailable
+                    ? 'Document uploaded to IPFS, but UpdateAssetDocument is not available on the deployed chaincode'
+                    : 'Document uploaded to IPFS, but Fabric metadata update failed',
+                errorCode: unavailable ? 'CHAINCODE_FUNCTION_UNAVAILABLE' : 'FABRIC_UPDATE_FAILED',
+                assetId,
+                ipfs: {
+                    success: true,
+                    cid: fileData.cid,
+                    hash: fileData.hash
+                },
+                blockchain
+            });
+        }
+
+        recordFromRequest(req, {
+            action: 'ASSET_DOCUMENT_UPDATED',
+            resourceType: 'asset',
+            resourceId: assetId,
+            success: true
+        });
+
+        return sendSuccess(res, {
+            message: 'Document uploaded and asset metadata updated successfully',
+            assetId,
+            file: {
+                hash: fileData.hash,
+                cid: fileData.cid,
+                size: fileData.size,
+                mimeType: fileData.mimeType
+            },
+            blockchain
+        });
+    } catch (error) {
+        console.error('Upload error:', error);
+        recordFromRequest(req, {
+            action: 'ASSET_DOCUMENT_UPDATED',
+            resourceType: 'asset',
+            resourceId: assetId,
+            success: false,
+            message: error.message
+        });
+
+        if (ipfsSucceeded) {
+            return res.status(500).json({
+                success: false,
+                message: 'Document uploaded to IPFS, but a later step failed',
+                errorCode: 'PARTIAL_SUCCESS',
+                assetId,
+                ipfs: {
+                    success: true,
+                    cid: fileData?.cid,
+                    hash: fileData?.hash
+                },
+                blockchain: {
+                    documentHashStored: false,
+                    documentCIDStored: false
+                }
+            });
+        }
+
+        return handleControllerError(res, error, 'Unable to upload document');
+    }
+}
+
+async function verifyAssetDocument(req, res) {
+    try {
+        const { assetId } = req.params;
+        assertSafeId(assetId, 'assetId');
+
+        const asset = await getAsset(assetId, req.user.organization);
+
+        if (!(await canViewAsset(req.user, asset))) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        if (!asset.documentCID || !asset.documentHash) {
+            return sendError(
+                res,
+                409,
+                'Asset does not have document hash and CID metadata',
+                'CONFLICT'
+            );
+        }
+
+        const retrieved = await hashFromIpfs(asset.documentCID);
+        const verified = retrieved.hash === asset.documentHash;
+
+        return sendSuccess(res, {
+            verified,
+            assetId,
+            cid: asset.documentCID,
+            blockchainHash: asset.documentHash,
+            calculatedHash: retrieved.hash
+        });
+    } catch (error) {
+        console.error('Verify document error:', error);
+        return handleControllerError(res, error, 'Unable to verify document');
+    }
+}
+
+async function downloadAssetDocument(req, res) {
+    try {
+        const { assetId } = req.params;
+        assertSafeId(assetId, 'assetId');
+
+        const asset = await getAsset(assetId, req.user.organization);
+
+        if (!(await canDownloadAsset(req.user, asset))) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        if (!asset.documentCID) {
+            return sendError(res, 404, 'Asset has no document CID', 'NOT_FOUND');
+        }
+
+        const buffer = await retrieveFromIpfs(asset.documentCID);
+
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${assetId}-document"`
+        );
+        return res.status(200).send(buffer);
+    } catch (error) {
+        console.error('Download document error:', error);
+        return handleControllerError(res, error, 'Unable to download document');
+    }
+}
+
+async function fetchAssetHistory(req, res) {
+    try {
+        const { assetId } = req.params;
+        assertSafeId(assetId, 'assetId');
+
+        const asset = await getAsset(assetId, req.user.organization);
+
+        if (!(await canViewAsset(req.user, asset))) {
+            return sendError(res, 403, 'Access denied', 'FORBIDDEN');
+        }
+
+        const history = await getAssetHistory(assetId, req.user.organization);
+        return sendSuccess(res, { assetId, history });
+    } catch (error) {
+        console.error('Asset history error:', error);
+        return handleControllerError(res, error, 'Unable to fetch asset history');
+    }
+}
+
+async function publicVerifyAsset(req, res) {
+    try {
+        const { assetId } = req.params;
+        assertSafeId(assetId, 'assetId');
+
+        const asset = await getAsset(assetId, 'BEL');
+        let verified = false;
+        let calculatedHash = null;
+
+        if (asset.documentCID && asset.documentHash) {
+            try {
+                const retrieved = await hashFromIpfs(asset.documentCID);
+                calculatedHash = retrieved.hash;
+                verified = retrieved.hash === asset.documentHash;
+            } catch (ipfsError) {
+                console.error('Public verify IPFS error:', ipfsError);
+                verified = false;
+            }
+        }
+
+        return sendSuccess(res, {
+            asset: {
+                assetId: asset.assetId,
+                name: asset.name,
+                assetType: asset.assetType,
+                status: asset.status,
+                ownerOrganization: asset.ownerOrganization || null,
+                documentHash: asset.documentHash || '',
+                cid: asset.documentCID || '',
+                createdAt: asset.createdAt,
+                updatedAt: asset.updatedAt
+            },
+            verificationStatus: verified ? 'VERIFIED' : 'UNVERIFIED',
+            verified,
+            calculatedHash
+        });
+    } catch (error) {
+        console.error('Public asset verify error:', error);
+        return handleControllerError(res, error, 'Unable to verify asset');
+    }
+}
 
 module.exports = {
     createAsset,
     fetchAsset,
-    transferExistingAsset
+    transferExistingAsset,
+    uploadAssetDocument,
+    verifyAssetDocument,
+    downloadAssetDocument,
+    fetchAssetHistory,
+    publicVerifyAsset,
+    publicAssetView
 };

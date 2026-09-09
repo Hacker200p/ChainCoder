@@ -17,11 +17,18 @@ const profiles = {
         mspPath: process.env.BEL_MSP_PATH || './fabric/bel/msp',
         tlsCaPath: process.env.BEL_TLS_CA_PATH || './fabric/bel/tls-ca.pem'
     },
+    Auditor: {
+        mspId: process.env.AUDITOR_MSP_ID || 'AuditorMSP',
+        peerEndpoint: process.env.AUDITOR_PEER_ENDPOINT || 'localhost:8051',
+        serverName: process.env.AUDITOR_TLS_SERVER_NAME || 'peer0.auditor.sih26125.local',
+        mspPath: process.env.AUDITOR_MSP_PATH || '../blockchain/sih-network/.msp-enroll/auditorchanneladmin/msp',
+        tlsCaPath: process.env.AUDITOR_TLS_CA_PATH || '../blockchain/sih-network/organizations/peerOrganizations/auditor.sih26125.local/peers/peer0.auditor.sih26125.local/tls/tlscacerts/tls-localhost-8054.pem'
+    },
     Contractor: {
         mspId: process.env.CONTRACTOR_MSP_ID || 'ContractorMSP',
         peerEndpoint: process.env.CONTRACTOR_PEER_ENDPOINT || 'localhost:9051',
         serverName: process.env.CONTRACTOR_TLS_SERVER_NAME || 'peer0.contractor.sih26125.local',
-        mspPath: process.env.CONTRACTOR_MSP_PATH || '../blockchain/sih-network/organizations/peerOrganizations/contractor.sih26125.local/users/contractoradmin/msp',
+        mspPath: process.env.CONTRACTOR_MSP_PATH || '../blockchain/sih-network/.msp-enroll/contractorchanneladmin/msp',
         tlsCaPath: process.env.CONTRACTOR_TLS_CA_PATH || '../blockchain/sih-network/organizations/peerOrganizations/contractor.sih26125.local/peers/peer0.contractor.sih26125.local/tls/tlscacerts/tls-localhost-9054.pem'
     }
 };

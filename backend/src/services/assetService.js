@@ -1,8 +1,9 @@
 'use strict';
 
-const { connectToFabric } = require('../config/fabric');
+const fabricService = require('./fabricService');
 
 async function mintAsset(
+    organization,
     assetId,
     name,
     assetType,
@@ -10,88 +11,42 @@ async function mintAsset(
     documentHash,
     documentCID
 ) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.submitTransaction(
-            'MintAsset',
-            assetId,
-            name,
-            assetType,
-            owner,
-            documentHash,
-            documentCID
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('MintAsset result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+    return fabricService.mintAsset(
+        organization,
+        assetId,
+        name,
+        assetType,
+        owner,
+        documentHash,
+        documentCID
+    );
 }
 
-async function getAsset(assetId) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.evaluateTransaction(
-            'GetAsset',
-            assetId
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('GetAsset result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+async function getAsset(assetId, organization = 'BEL') {
+    return fabricService.getAsset(assetId, organization);
 }
 
 async function transferAsset(assetId, newOwner, organization = 'BEL') {
-    let connection;
+    return fabricService.transferAsset(assetId, newOwner, organization);
+}
 
-    try {
-        connection = connectToFabric(organization);
+async function updateAssetDocument(assetId, documentHash, documentCID, organization = 'BEL') {
+    return fabricService.updateAssetDocument(
+        assetId,
+        documentHash,
+        documentCID,
+        organization
+    );
+}
 
-        const result = await connection.contract.submitTransaction(
-            'TransferAsset',
-            assetId,
-            newOwner
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('TransferAsset result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+async function getAssetHistory(assetId, organization = 'BEL') {
+    return fabricService.getAssetHistory(assetId, organization);
 }
 
 module.exports = {
     mintAsset,
     getAsset,
-    transferAsset
+    transferAsset,
+    updateAssetDocument,
+    getAssetHistory
 };

@@ -1,27 +1,14 @@
 'use strict';
 
 const { connectToFabric } = require('../config/fabric');
+const { isChaincodeFunctionMissing } = require('../utils/errors');
 
-async function registerIdentity(identityId, name, organization, role) {
+async function withContract(organization, callback) {
     let connection;
 
     try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.submitTransaction(
-            'RegisterIdentity',
-            identityId,
-            name,
-            organization,
-            role
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('RegisterIdentity result:', rawResult);
-
-        return JSON.parse(rawResult);
-
+        connection = connectToFabric(organization || 'BEL');
+        return await callback(connection.contract);
     } finally {
         if (connection) {
             connection.gateway.close();
@@ -30,94 +17,165 @@ async function registerIdentity(identityId, name, organization, role) {
     }
 }
 
-async function getIdentity(identityId) {
-    let connection;
+function parseResult(result) {
+    const rawResult = Buffer.from(result).toString('utf8');
 
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.evaluateTransaction(
-            'GetIdentity',
-            identityId
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('GetIdentity result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
+    if (!rawResult) {
+        return null;
     }
+
+    return JSON.parse(rawResult);
 }
 
+async function submitTransaction(organization, functionName, ...args) {
+    return withContract(organization, async (contract) => {
+        try {
+            const result = await contract.submitTransaction(functionName, ...args);
+            const parsed = parseResult(result);
+            console.log(`${functionName} result:`, parsed);
+            return parsed;
+        } catch (error) {
+            if (functionName === 'UpdateAssetDocument' && isChaincodeFunctionMissing(error)) {
+                const unavailable = new Error(
+                    'UpdateAssetDocument is not available on the deployed chaincode'
+                );
+                unavailable.code = 'CHAINCODE_FUNCTION_UNAVAILABLE';
+                unavailable.cause = error;
+                throw unavailable;
+            }
 
-async function revokeIdentity(identityId) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.submitTransaction(
-            'RevokeIdentity',
-            identityId
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('RevokeIdentity result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
+            throw error;
         }
-    }
+    });
 }
+
+async function evaluateTransaction(organization, functionName, ...args) {
+    return withContract(organization, async (contract) => {
+        try {
+            const result = await contract.evaluateTransaction(functionName, ...args);
+            const parsed = parseResult(result);
+            console.log(`${functionName} result:`, parsed);
+            return parsed;
+        } catch (error) {
+            if (isChaincodeFunctionMissing(error)) {
+                const unavailable = new Error(
+                    `${functionName} is not available on the deployed chaincode`
+                );
+                unavailable.code = 'CHAINCODE_FUNCTION_UNAVAILABLE';
+                unavailable.cause = error;
+                throw unavailable;
+            }
+
+            throw error;
+        }
+    });
+}
+
+async function registerIdentity(
+    organization,
+    identityId,
+    name,
+    identityOrganization,
+    role
+) {
+    return submitTransaction(
+        organization,
+        'RegisterIdentity',
+        identityId,
+        name,
+        identityOrganization,
+        role
+    );
+}
+
+async function getIdentity(identityId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'GetIdentity', identityId);
+}
+
+async function revokeIdentity(identityId, organization = 'BEL') {
+    return submitTransaction(organization, 'RevokeIdentity', identityId);
+}
+
 async function grantAccess(
+    organization,
     accessId,
     identityId,
     assetId,
     grantedTo,
     permission
 ) {
-    let connection;
+    return submitTransaction(
+        organization,
+        'GrantAccess',
+        accessId,
+        identityId,
+        assetId,
+        grantedTo,
+        permission
+    );
+}
 
-    try {
-        connection = connectToFabric();
+async function checkAccess(identityId, assetId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'CheckAccess', identityId, assetId);
+}
 
-        const result = await connection.contract.submitTransaction(
-            'GrantAccess',
-            accessId,
-            identityId,
-            assetId,
-            grantedTo,
-            permission
-        );
+async function revokeAccess(identityId, assetId, organization = 'BEL') {
+    return submitTransaction(organization, 'RevokeAccess', identityId, assetId);
+}
 
-        const rawResult = Buffer.from(result).toString('utf8');
+async function mintAsset(
+    organization,
+    assetId,
+    name,
+    assetType,
+    owner,
+    documentHash,
+    documentCID
+) {
+    return submitTransaction(
+        organization,
+        'MintAsset',
+        assetId,
+        name,
+        assetType,
+        owner,
+        documentHash,
+        documentCID
+    );
+}
 
-        console.log('GrantAccess result:', rawResult);
+async function getAsset(assetId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'GetAsset', assetId);
+}
 
-        return JSON.parse(rawResult);
+async function transferAsset(assetId, newOwner, organization = 'BEL') {
+    return submitTransaction(organization, 'TransferAsset', assetId, newOwner);
+}
 
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+async function updateAssetDocument(assetId, documentHash, documentCID, organization = 'BEL') {
+    return submitTransaction(
+        organization,
+        'UpdateAssetDocument',
+        assetId,
+        documentHash,
+        documentCID
+    );
+}
+
+async function getAssetHistory(assetId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'GetAssetHistory', assetId);
 }
 
 module.exports = {
     registerIdentity,
     getIdentity,
     revokeIdentity,
-    grantAccess
+    grantAccess,
+    checkAccess,
+    revokeAccess,
+    mintAsset,
+    getAsset,
+    transferAsset,
+    updateAssetDocument,
+    getAssetHistory
 };

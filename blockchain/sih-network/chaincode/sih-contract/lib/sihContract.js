@@ -479,6 +479,58 @@ module.exports = class SIHContract extends Contract {
 
         return data.toString();
     }
+    // ------------------------------------------------------------
+// UPDATE ASSET DOCUMENT
+// ------------------------------------------------------------
+
+async UpdateAssetDocument(
+    ctx,
+    assetId,
+    documentHash,
+    documentCID
+) {
+
+    if (!assetId || !documentHash || !documentCID) {
+        throw new Error(
+            'assetId, documentHash and documentCID are required'
+        );
+    }
+
+    // Only BEL or Auditor can update document metadata
+    this.requireOrganization(
+        ctx,
+        ['BELMSP', 'AuditorMSP']
+    );
+
+    const key = this.getAssetKey(assetId);
+
+    const data = await ctx.stub.getState(key);
+
+    if (!data || data.length === 0) {
+        throw new Error(
+            `Asset ${assetId} does not exist`
+        );
+    }
+
+    const asset = JSON.parse(data.toString());
+
+    if (asset.status !== 'ACTIVE') {
+        throw new Error(
+            `Asset ${assetId} is not active`
+        );
+    }
+
+    asset.documentHash = documentHash;
+    asset.documentCID = documentCID;
+    asset.updatedAt = new Date().toISOString();
+
+    await ctx.stub.putState(
+        key,
+        Buffer.from(JSON.stringify(asset))
+    );
+
+    return JSON.stringify(asset);
+}
 
     // ------------------------------------------------------------
     // TRANSFER ASSET

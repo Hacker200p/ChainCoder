@@ -1,97 +1,32 @@
 'use strict';
 
-const { connectToFabric } = require('../config/fabric');
-
+const fabricService = require('./fabricService');
 
 async function grantAccess(
     accessId,
     identityId,
     assetId,
     grantedTo,
-    permission
+    permission,
+    organization = 'BEL'
 ) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.submitTransaction(
-            'GrantAccess',
-            accessId,
-            identityId,
-            assetId,
-            grantedTo,
-            permission
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('GrantAccess result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+    return fabricService.grantAccess(
+        organization,
+        accessId,
+        identityId,
+        assetId,
+        grantedTo,
+        permission
+    );
 }
 
-
-async function checkAccess(identityId, assetId) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.evaluateTransaction(
-            'CheckAccess',
-            identityId,
-            assetId
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('CheckAccess result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+async function checkAccess(identityId, assetId, organization = 'BEL') {
+    return fabricService.checkAccess(identityId, assetId, organization);
 }
 
-
-async function revokeAccess(identityId, assetId) {
-    let connection;
-
-    try {
-        connection = connectToFabric();
-
-        const result = await connection.contract.submitTransaction(
-            'RevokeAccess',
-            identityId,
-            assetId
-        );
-
-        const rawResult = Buffer.from(result).toString('utf8');
-
-        console.log('RevokeAccess result:', rawResult);
-
-        return JSON.parse(rawResult);
-
-    } finally {
-        if (connection) {
-            connection.gateway.close();
-            connection.client.close();
-        }
-    }
+async function revokeAccess(identityId, assetId, organization = 'BEL') {
+    return fabricService.revokeAccess(identityId, assetId, organization);
 }
-
 
 module.exports = {
     grantAccess,

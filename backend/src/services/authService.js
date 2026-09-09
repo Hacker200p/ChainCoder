@@ -1,5 +1,6 @@
 'use strict';
 
+const { AppError } = require('../utils/errors');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../utils/auth');
 
@@ -86,6 +87,50 @@ async function login(userId, password) {
     };
 }
 
+function listUsers() {
+    return users.map((user) => ({
+        userId: user.userId,
+        name: user.name,
+        organization: user.organization,
+        role: user.role
+    }));
+}
+
+function enrollUser({ userId, name, organization, role, password }) {
+    if (!userId || !name || !organization || !role || !password) {
+        throw new AppError(
+            'userId, name, organization, role and password are required',
+            400,
+            'BAD_REQUEST'
+        );
+    }
+
+    const existing = users.find((item) => item.userId === userId);
+
+    if (existing) {
+        throw new AppError('A user with this ID already exists', 409, 'CONFLICT');
+    }
+
+    const user = {
+        userId,
+        name,
+        organization,
+        role,
+        passwordHash: bcrypt.hashSync(password, 10)
+    };
+
+    users.push(user);
+
+    return {
+        userId: user.userId,
+        name: user.name,
+        organization: user.organization,
+        role: user.role
+    };
+}
+
 module.exports = {
-    login
+    login,
+    listUsers,
+    enrollUser
 };

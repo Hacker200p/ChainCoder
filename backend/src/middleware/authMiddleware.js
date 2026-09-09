@@ -9,7 +9,8 @@ function authenticate(req, res, next) {
         if (!authHeader) {
             return res.status(401).json({
                 success: false,
-                message: 'Authorization header is required'
+                message: 'Authorization header is required',
+                errorCode: 'UNAUTHENTICATED'
             });
         }
 
@@ -18,7 +19,8 @@ function authenticate(req, res, next) {
         if (parts.length !== 2 || parts[0] !== 'Bearer') {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid authorization format'
+                message: 'Invalid authorization format',
+                errorCode: 'UNAUTHENTICATED'
             });
         }
 
@@ -35,65 +37,57 @@ function authenticate(req, res, next) {
 
         return res.status(401).json({
             success: false,
-            message: 'Invalid or expired token'
+            message: 'Invalid or expired token',
+            errorCode: 'UNAUTHENTICATED'
         });
     }
 }
 
 function authorize(...allowedRoles) {
     return (req, res, next) => {
-        console.log('RBAC DEBUG:', {
-            userId: req.user?.userId,
-            role: req.user?.role,
-            organization: req.user?.organization,
-            allowedRoles
-        });
-
         if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: 'Authentication required'
+                message: 'Authentication required',
+                errorCode: 'UNAUTHENTICATED'
             });
         }
 
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: 'You do not have permission to perform this action'
+                message: 'You do not have permission to perform this action',
+                errorCode: 'FORBIDDEN'
             });
         }
 
         next();
     };
 }
+
 function authorizeOrganization(organization, ...allowedRoles) {
     return (req, res, next) => {
-        console.log('ORG RBAC DEBUG:', {
-            userId: req.user?.userId,
-            role: req.user?.role,
-            organization: req.user?.organization,
-            requiredOrganization: organization,
-            allowedRoles
-        });
-
         if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: 'Authentication required'
+                message: 'Authentication required',
+                errorCode: 'UNAUTHENTICATED'
             });
         }
 
         if (req.user.organization !== organization) {
             return res.status(403).json({
                 success: false,
-                message: 'You do not have permission to access this organization resource'
+                message: 'You do not have permission to access this organization resource',
+                errorCode: 'FORBIDDEN'
             });
         }
 
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: 'You do not have permission to perform this action'
+                message: 'You do not have permission to perform this action',
+                errorCode: 'FORBIDDEN'
             });
         }
 
@@ -103,23 +97,25 @@ function authorizeOrganization(organization, ...allowedRoles) {
 
 function authorizeOrganizationRoles(...requirements) {
     return (req, res, next) => {
-        const allowed = requirements.some(
-            requirement =>
-                req.user?.organization === requirement.organization &&
-                requirement.roles.includes(req.user.role)
-        );
-
         if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: 'Authentication required'
+                message: 'Authentication required',
+                errorCode: 'UNAUTHENTICATED'
             });
         }
+
+        const allowed = requirements.some(
+            requirement =>
+                req.user.organization === requirement.organization &&
+                requirement.roles.includes(req.user.role)
+        );
 
         if (!allowed) {
             return res.status(403).json({
                 success: false,
-                message: 'You do not have permission to perform this action'
+                message: 'You do not have permission to perform this action',
+                errorCode: 'FORBIDDEN'
             });
         }
 

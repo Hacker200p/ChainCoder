@@ -135,7 +135,7 @@ services:
       # TLS
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/signcerts/cert.pem
-      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/e7e8a5e41b1f28aecc8b1b6d397ec7d1c44bd32565331f63b51625eed674f413_sk
+      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/keystore/6f6324610b1055ca08c4af2ee52b5258e26154b1712362a4be6bae31f4ef3dc7_sk
       - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/tlscacerts/tls-localhost-9054.pem
 
       # Gossip
@@ -150,6 +150,7 @@ services:
     volumes:
       - ../organizations/peerOrganizations/contractor.sih26125.local/peers/peer0.contractor.sih26125.local/msp:/var/hyperledger/peer/msp
       - ../organizations/peerOrganizations/contractor.sih26125.local/peers/peer0.contractor.sih26125.local/tls:/var/hyperledger/peer/tls
+      - ../organizations/ordererOrganizations/sih26125.local/msp/tlscacerts/tls-localhost-10054-OrdererCA.pem:/var/hyperledger/peer/orderer-tls-ca.pem:ro
       - /var/run/docker.sock:/host/var/run/docker.sock
       - contractor_data:/var/hyperledger/production
 

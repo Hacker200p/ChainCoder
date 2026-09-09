@@ -186,3 +186,9 @@ storage/
 # Fabric sample binaries / source repository
 /blockchain/fabric-samples/
 /backend/fabric/
+# Local Fabric debugging / extracted artifacts
+/backend/config_block.json
+/backend/config_block.pb
+/backend/contractor-channel-ca.pem
+/blockchain/sih-network/peer-cert.pem
+/blockchain/sih-network/peer0-tls-new-cert.pem
