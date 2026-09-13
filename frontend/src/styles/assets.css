@@ -1,0 +1,470 @@
+/* ===================================
+   My Assets — Search Bar
+   =================================== */
+
+.asset-search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.asset-search-input {
+  flex: 1;
+  padding: 12px 14px;
+  background: #0f151e;
+  border: 1px solid #252f3e;
+  border-radius: 9px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.asset-search-input::placeholder {
+  color: #5a6577;
+}
+
+.asset-search-input:focus {
+  border-color: #64748b;
+}
+
+.asset-search-button {
+  padding: 12px 22px;
+  background: #ffffff;
+  color: #080b12;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.asset-search-button:hover {
+  opacity: 0.9;
+}
+
+.asset-search-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===================================
+   Asset Grid
+   =================================== */
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ===================================
+   Asset Card
+   =================================== */
+
+.asset-card {
+  background: #0f151e;
+  border: 1px solid #252f3e;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asset-card:hover {
+  border-color: #3a4658;
+}
+
+.asset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asset-card-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: #748095;
+  letter-spacing: 0.5px;
+}
+
+.asset-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e5e9ef;
+}
+
+.asset-card-type {
+  font-size: 11px;
+  color: #687487;
+}
+
+.asset-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asset-card-label {
+  font-size: 11px;
+  color: #748095;
+}
+
+.asset-card-value {
+  font-size: 12px;
+  color: #c7cfdb;
+}
+
+.asset-card-button {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid #293443;
+  border-radius: 8px;
+  color: #8793a6;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.asset-card-button:hover {
+  color: #ffffff;
+  background: #151d28;
+  border-color: #3a4658;
+}
+
+/* ===================================
+   Asset Status Badges
+   =================================== */
+
+.asset-status-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.asset-status-active {
+  background: #17251e;
+  color: #83a995;
+  border: 1px solid #284233;
+}
+
+.asset-status-revoked {
+  background: #251717;
+  color: #a98383;
+  border: 1px solid #422828;
+}
+
+.asset-status-transferred {
+  background: #1a1d25;
+  color: #8393a9;
+  border: 1px solid #2e3a4d;
+}
+
+/* ===================================
+   Messages and Errors
+   =================================== */
+
+.asset-message,
+.asset-empty {
+  padding: 20px;
+  border: 1px solid #252f3e;
+  border-radius: 10px;
+  background: #0f151e;
+  color: #8d99ab;
+  font-size: 13px;
+}
+
+.asset-error {
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border: 1px solid #3d2525;
+  border-radius: 10px;
+  background: #1a1212;
+  color: #c88d8d;
+  font-size: 13px;
+}
+
+/* ===================================
+   Asset Details — Back Link
+   =================================== */
+
+.asset-details-back {
+  margin-bottom: 20px;
+}
+
+.asset-back-link {
+  color: #748095;
+  font-size: 13px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.asset-back-link:hover {
+  color: #ffffff;
+}
+
+/* ===================================
+   Asset Details — Header
+   =================================== */
+
+.asset-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px;
+  margin-bottom: 18px;
+  background: #0f151e;
+  border: 1px solid #252f3e;
+  border-radius: 12px;
+}
+
+.asset-details-header h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.asset-details-header p {
+  margin: 0;
+  color: #748095;
+  font-size: 13px;
+}
+
+/* ===================================
+   Asset Details — Sections
+   =================================== */
+
+.asset-section {
+  margin-bottom: 18px;
+}
+
+.asset-section-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e5e9ef;
+}
+
+.asset-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #0f151e;
+  border: 1px solid #252f3e;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.asset-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asset-info-wide {
+  grid-column: 1 / -1;
+}
+
+.asset-info-label {
+  font-size: 11px;
+  color: #748095;
+}
+
+.asset-info-value {
+  font-size: 13px;
+  color: #e5e9ef;
+  word-break: break-all;
+}
+
+.asset-info-mono {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  color: #9aa5b5;
+}
+
+/* ===================================
+   Verification Result
+   =================================== */
+
+.asset-verify-result {
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.asset-verify-success {
+  background: #0f1a14;
+  border: 1px solid #284233;
+}
+
+.asset-verify-fail {
+  background: #1a1212;
+  border: 1px solid #3d2525;
+}
+
+.asset-verify-status {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.asset-verify-success .asset-verify-status {
+  color: #83a995;
+}
+
+.asset-verify-fail .asset-verify-status {
+  color: #c88d8d;
+}
+
+.asset-verify-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===================================
+   Action Buttons
+   =================================== */
+
+.asset-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.asset-action-button {
+  padding: 11px 20px;
+  background: transparent;
+  border: 1px solid #293443;
+  border-radius: 8px;
+  color: #8793a6;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.asset-action-button:hover {
+  color: #ffffff;
+  background: #151d28;
+  border-color: #3a4658;
+}
+
+.asset-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===================================
+   Asset History
+   =================================== */
+
+.asset-history-message {
+  padding: 20px;
+  border: 1px solid #252f3e;
+  border-radius: 10px;
+  background: #0f151e;
+  color: #8d99ab;
+  font-size: 13px;
+}
+
+.asset-history-error {
+  padding: 14px 18px;
+  border: 1px solid #3d2525;
+  border-radius: 10px;
+  background: #1a1212;
+  color: #c88d8d;
+  font-size: 13px;
+}
+
+.asset-history-table-wrapper {
+  overflow-x: auto;
+  background: #0f151e;
+  border: 1px solid #252f3e;
+  border-radius: 10px;
+}
+
+.asset-history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.asset-history-table th {
+  padding: 13px 16px;
+  text-align: left;
+  color: #697588;
+  font-size: 10px;
+  font-weight: 600;
+  border-bottom: 1px solid #252f3e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.asset-history-table td {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: #c7cfdb;
+  border-bottom: 1px solid #1c2531;
+}
+
+.asset-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.asset-history-txid {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  color: #8d99ab;
+}
+
+.asset-history-time {
+  color: #697588;
+}
+
+/* ===================================
+   Responsive
+   =================================== */
+
+@media (max-width: 1000px) {
+  .asset-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .asset-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .asset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-search-bar {
+    flex-direction: column;
+  }
+
+  .asset-details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .asset-actions {
+    flex-direction: column;
+  }
+}
