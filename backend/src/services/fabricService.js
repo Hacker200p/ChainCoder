@@ -166,6 +166,36 @@ async function getAssetHistory(assetId, organization = 'BEL') {
     return evaluateTransaction(organization, 'GetAssetHistory', assetId);
 }
 
+async function resolveDID(did, organization = 'BEL') {
+    return evaluateTransaction(organization, 'ResolveDID', did);
+}
+
+async function verifyDID(did, organization = 'BEL') {
+    return evaluateTransaction(organization, 'VerifyDID', did);
+}
+
+async function putIdentityKycDetails(organization, identityId, kycData) {
+    const payload = typeof kycData === 'string' ? kycData : JSON.stringify(kycData);
+    return submitTransaction(organization || 'BEL', 'PutIdentityKycDetails', identityId, payload);
+}
+
+async function getIdentityKycDetails(identityId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'GetIdentityKycDetails', identityId);
+}
+
+async function putAssetPrivateDetails(organization, assetId, details) {
+    const payload = typeof details === 'string' ? details : JSON.stringify(details);
+    return submitTransaction(organization || 'BEL', 'PutAssetPrivateDetails', assetId, payload);
+}
+
+async function getAssetPrivateDetails(assetId, organization = 'BEL') {
+    return evaluateTransaction(organization, 'GetAssetPrivateDetails', assetId);
+}
+
+async function endorseTransaction(organization, txType, targetId) {
+    return submitTransaction(organization || 'Auditor', 'EndorseTransaction', txType, targetId);
+}
+
 module.exports = {
     registerIdentity,
     getIdentity,
@@ -177,5 +207,12 @@ module.exports = {
     getAsset,
     transferAsset,
     updateAssetDocument,
-    getAssetHistory
+    getAssetHistory,
+    resolveDID,
+    verifyDID,
+    putIdentityKycDetails,
+    getIdentityKycDetails,
+    putAssetPrivateDetails,
+    getAssetPrivateDetails,
+    endorseTransaction
 };

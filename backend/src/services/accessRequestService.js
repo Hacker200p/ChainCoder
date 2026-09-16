@@ -2,10 +2,52 @@
 
 const crypto = require('crypto');
 const { AppError } = require('../utils/errors');
+const { query, isDbConnected } = require('../config/db');
 
 const requests = [];
 
-function createAccessRequest({
+// Load existing requests from PostgreSQL if available
+async function loadRequestsFromDb() {
+    if (!isDbConnected()) return;
+    try {
+        const res = await query(`
+            SELECT 
+                request_id AS "requestId",
+                requester_id AS "requesterId",
+                requester_name AS "requesterName",
+                organization,
+                identity_id AS "identityId",
+                asset_id AS "assetId",
+                permission,
+                reason,
+                status,
+                approved_by AS "approvedBy",
+                approved_at AS "approvedAt",
+                auditor_approved_by AS "auditorApprovedBy",
+                auditor_approved_at AS "auditorApprovedAt",
+                rejected_by AS "rejectedBy",
+                rejection_reason AS "rejectionReason",
+                rejected_at AS "rejectedAt",
+                created_at AS "createdAt",
+                updated_at AS "updatedAt"
+            FROM access_requests
+            ORDER BY created_at DESC
+        `);
+
+        for (const row of res.rows) {
+            if (!requests.some(r => r.requestId === row.requestId)) {
+                requests.push(row);
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to load access requests from DB:', err.message);
+    }
+}
+
+// Attempt initial load on next tick
+setTimeout(loadRequestsFromDb, 1500);
+
+async function createAccessRequest({
     requesterId,
     requesterName,
     organization,
@@ -79,6 +121,32 @@ function createAccessRequest({
 
     requests.push(request);
 
+    if (isDbConnected()) {
+        try {
+            await query(
+                `INSERT INTO access_requests (
+                    request_id, requester_id, requester_name, organization, identity_id,
+                    asset_id, permission, reason, status, created_at, updated_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+                [
+                    request.requestId,
+                    request.requesterId,
+                    request.requesterName,
+                    request.organization,
+                    request.identityId,
+                    request.assetId,
+                    request.permission,
+                    request.reason,
+                    request.status,
+                    request.createdAt,
+                    request.updatedAt
+                ]
+            );
+        } catch (err) {
+            console.error('Failed to persist access request to DB:', err.message);
+        }
+    }
+
     return request;
 }
 
@@ -116,7 +184,7 @@ function assertNotSelfAction(request, actorId, action) {
     }
 }
 
-function approveRequest(requestId, approvedBy) {
+async function approveRequest(requestId, approvedBy) {
     const request = requests.find(
         (item) => item.requestId === requestId
     );
@@ -135,15 +203,29 @@ function approveRequest(requestId, approvedBy) {
         );
     }
 
+    const now = new Date().toISOString();
     request.status = 'BEL_APPROVED';
     request.approvedBy = approvedBy;
-    request.approvedAt = new Date().toISOString();
-    request.updatedAt = new Date().toISOString();
+    request.approvedAt = now;
+    request.updatedAt = now;
+
+    if (isDbConnected()) {
+        try {
+            await query(
+                `UPDATE access_requests 
+                 SET status = $1, approved_by = $2, approved_at = $3, updated_at = $4 
+                 WHERE request_id = $5`,
+                [request.status, request.approvedBy, request.approvedAt, request.updatedAt, requestId]
+            );
+        } catch (err) {
+            console.error('Failed to update access request in DB:', err.message);
+        }
+    }
 
     return request;
 }
 
-function rejectRequest(requestId, rejectedBy, reason) {
+async function rejectRequest(requestId, rejectedBy, reason) {
     const request = requests.find(
         (item) => item.requestId === requestId
     );
@@ -154,7 +236,7 @@ function rejectRequest(requestId, rejectedBy, reason) {
 
     assertNotSelfAction(request, rejectedBy, 'reject');
 
-    if (request.status !== 'PENDING') {
+    if (request.status !== 'PENDING' && request.status !== 'BEL_APPROVED') {
         throw new AppError(
             `Request cannot be rejected because its status is ${request.status}`,
             409,
@@ -162,16 +244,30 @@ function rejectRequest(requestId, rejectedBy, reason) {
         );
     }
 
+    const now = new Date().toISOString();
     request.status = 'REJECTED';
     request.rejectedBy = rejectedBy;
     request.rejectionReason = reason || null;
-    request.rejectedAt = new Date().toISOString();
-    request.updatedAt = new Date().toISOString();
+    request.rejectedAt = now;
+    request.updatedAt = now;
+
+    if (isDbConnected()) {
+        try {
+            await query(
+                `UPDATE access_requests 
+                 SET status = $1, rejected_by = $2, rejection_reason = $3, rejected_at = $4, updated_at = $5 
+                 WHERE request_id = $6`,
+                [request.status, request.rejectedBy, request.rejectionReason, request.rejectedAt, request.updatedAt, requestId]
+            );
+        } catch (err) {
+            console.error('Failed to update access request in DB:', err.message);
+        }
+    }
 
     return request;
 }
 
-function auditorApproveRequest(requestId, auditorId) {
+async function auditorApproveRequest(requestId, auditorId) {
     const request = requests.find(
         (item) => item.requestId === requestId
     );
@@ -190,10 +286,24 @@ function auditorApproveRequest(requestId, auditorId) {
         );
     }
 
+    const now = new Date().toISOString();
     request.status = 'ACTIVE';
     request.auditorApprovedBy = auditorId;
-    request.auditorApprovedAt = new Date().toISOString();
-    request.updatedAt = new Date().toISOString();
+    request.auditorApprovedAt = now;
+    request.updatedAt = now;
+
+    if (isDbConnected()) {
+        try {
+            await query(
+                `UPDATE access_requests 
+                 SET status = $1, auditor_approved_by = $2, auditor_approved_at = $3, updated_at = $4 
+                 WHERE request_id = $5`,
+                [request.status, request.auditorApprovedBy, request.auditorApprovedAt, request.updatedAt, requestId]
+            );
+        } catch (err) {
+            console.error('Failed to update access request in DB:', err.message);
+        }
+    }
 
     return request;
 }
@@ -216,5 +326,6 @@ module.exports = {
     getRequestsByRequester,
     approveRequest,
     rejectRequest,
-    auditorApproveRequest
+    auditorApproveRequest,
+    loadRequestsFromDb
 };

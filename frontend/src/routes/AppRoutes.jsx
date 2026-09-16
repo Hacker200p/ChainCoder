@@ -6,6 +6,17 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import MyIdentity from "../pages/identity/MyIdentity";
 import MyAssets from "../pages/assets/MyAssets";
 import AssetDetails from "../pages/assets/AssetDetails";
+import MintAsset from "../pages/assets/MintAsset";
+import AccessManagement from "../pages/access/AccessManagement";
+import AccessRequests from "../pages/access/AccessRequests";
+import Approvals from "../pages/approvals/Approvals";
+import IdentityManagement from "../pages/identity/IdentityManagement";
+import AuditorDashboard from "../pages/auditor/AuditorDashboard";
+import AuditHistory from "../pages/audit/AuditHistory";
+import Notifications from "../pages/notifications/Notifications";
+import PublicVerification from "../pages/verification/PublicVerification";
+import PublicIdentityVerification from "../pages/verification/PublicIdentityVerification";
+import Settings from "../pages/settings/Settings";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -25,6 +36,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/verify" element={<PublicVerification />} />
+      <Route path="/verify-identity" element={<PublicIdentityVerification />} />
 
       <Route
         path="/dashboard"
@@ -41,7 +54,15 @@ function AppRoutes() {
                 <MyIdentity />
             </ProtectedRoute>
         }
-        />
+      />
+      <Route
+        path="/identities"
+        element={
+          <ProtectedRoute>
+            <IdentityManagement />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/assets"
         element={
@@ -55,7 +76,71 @@ function AppRoutes() {
         path="/assets/mint"
         element={
           <ProtectedRoute>
-            <div className="app-layout"><div className="main-area"><main className="main-content"><h2>Mint Asset</h2><p style={{ color: '#748095' }}>Coming soon.</p></main></div></div>
+            <MintAsset />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/access"
+        element={
+          <ProtectedRoute>
+            <AccessManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/access-requests"
+        element={
+          <ProtectedRoute>
+            <AccessRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/access/requests"
+        element={
+          <ProtectedRoute>
+            <AccessRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/approvals"
+        element={
+          <ProtectedRoute>
+            <Approvals />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/auditor"
+        element={
+          <ProtectedRoute>
+            <AuditorDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/audit-history"
+        element={
+          <ProtectedRoute>
+            <AuditHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/audit"
+        element={
+          <ProtectedRoute>
+            <AuditHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
           </ProtectedRoute>
         }
       />
@@ -68,6 +153,14 @@ function AppRoutes() {
         }
       />
 
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="*"
         element={<Navigate to="/dashboard" replace />}

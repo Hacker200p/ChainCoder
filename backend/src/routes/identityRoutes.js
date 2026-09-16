@@ -5,7 +5,9 @@ const express = require('express');
 const {
     createIdentity,
     fetchIdentity,
-    revokeExistingIdentity
+    revokeExistingIdentity,
+    getIdentityDID,
+    checkCAHealthController
 } = require('../controllers/identityController');
 
 const {
@@ -15,6 +17,12 @@ const {
 } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+router.get(
+    '/ca/health',
+    authenticate,
+    checkCAHealthController
+);
 
 router.post(
     '/',
@@ -30,6 +38,12 @@ router.get(
     '/:identityId',
     authenticate,
     fetchIdentity
+);
+
+router.get(
+    '/:identityId/did',
+    authenticate,
+    getIdentityDID
 );
 
 router.patch(
